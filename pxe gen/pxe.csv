@@ -1,0 +1,8 @@
+n,group,label,menu_label,kernel,append
+y,ESXi,esxi_553_ks,5.5 U3 kickstart install,esxi553/mboot.c32,-c esxi553/boot_ks.cfg ks=http://192.168.1.1:8081/kickstart/esxi/ks.cfg
+y,ESXi,esxi_601_ks,6.0 U1 kickstart install,esxi601/mboot.c32,-c esxi601/boot_ks.cfg ks=http://192.168.1.1:8081/kickstart/esxi/ks.cfg
+y,SLES,sles11_ks,SLES11 SP4 kickstart teszt,sles11sp4/linux,initrd=sles11sp4/initrd install=http://192.168.1.1:8081/repos/sles11_sp4/ autoyast=http://192.168.1.1:8081/kickstart/sles11/autoinst.xml
+y,CentOS,centos_install,centos 7 kickstart,/centos7/vmlinuz,initrd=/centos7/initrd.img ks=http://asus.example.com:8081/kickstart/centos/alt_centos.cfg
+y,Ubuntu,ubuntu_install,Ubuntu 14.04 kickstart,ubuntu14/linux,initrd=ubuntu14/initrd.gz url=http://asus.example.com:8081/kickstart/ubuntu/alt_ubuntu.seed auto-install/enable=true netcfg/get_hostname="general" vga=788 --
+y,Ubuntu,ubuntu_install_ac,Ubuntu 14.04 kickstart apt-cacher proxyval,ubuntu14/linux,initrd=ubuntu14/initrd.gz url=http://asus.example.com:8081/kickstart/ubuntu/alt_ubuntu_apt-cacher.seed auto-install/enable=true netcfg/get_hostname="general" vga=788 --
+y,sysrescd,sysrescd,Systemrescuecd network boot,sysrescd/rescue64,initrd=sysrescd/initram.igz netboot=http://192.168.1.1:8081/sysrescd/sysrcd.dat

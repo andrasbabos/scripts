@@ -1,0 +1,3 @@
+DEFAULT menu.c32
+TIMEOUT 0
+MENU TITLE vLabor install by Andras
