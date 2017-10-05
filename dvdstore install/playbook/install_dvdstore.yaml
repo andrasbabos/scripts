@@ -1,0 +1,135 @@
+---
+  - hosts: dvdstore
+    tasks:
+    #zabbix
+    - name: install zabbix client
+      zypper:
+        name: "http://storage.example.com/repo/zabbix-agent-2.2.14-2.1.x86_64.rpm"
+        state: present
+
+    - name: copy zabbix config
+      copy:
+        src: /root/zabbix-agentd.conf
+        dest: /etc/zabbix/zabbix-agentd.conf
+
+    - name: enable, start zabbix service
+      service:
+        name: zabbix-agentd
+        state: started
+        enabled: true
+
+    #postgres
+    - name: install postgresql
+      zypper:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - libpq5
+        - postgresql91
+        - postgresql91-server
+        - postgresql-init
+
+    - name: enable, start postgresql service
+      service:
+        name: postgresql
+        state: started
+        enabled: true
+
+    - name: copy postgresql config
+      copy:
+        src: /var/www/html/ds/{{ item }}
+        dest: /var/lib/pgsql/data/{{ item }}
+      with_items:
+        - postgresql.conf
+        - pg_hba.conf
+
+    #for the ansible user module psycopg2 python module is needed, it isn't available in sles
+    - name: postgres roles
+      # from ansible 1.9
+      #shell: echo "ALTER USER postgres WITH PASSWORD 'postgres'; CREATE USER ds2; ALTER ROLE ds2 WITH superuser; ALTER USER ds2 WITH PASSWORD 'ds2'; CREATE USER web; ALTER ROLE web WITH superuser; ALTER USER web WITH PASSWORD 'web'; CREATE USER root; ALTER ROLE root WITH superuser;" | psql
+      #become: yes
+      #become_user: postgres
+      #before ansible 1.9
+      shell: echo "ALTER USER postgres WITH PASSWORD 'postgres'; CREATE USER ds2; ALTER ROLE ds2 WITH superuser; ALTER USER ds2 WITH PASSWORD 'ds2'; CREATE USER web; ALTER ROLE web WITH superuser; ALTER USER web WITH PASSWORD 'web'; CREATE USER root; ALTER ROLE root WITH superuser;" | su - postgres -c psql
+
+    #it isn't good in handler because the changes won't be activated in time and the upload will fail
+    - name: restart postgresql service
+      service:
+        name: postgresql
+        state: restarted
+
+    #apache
+    - name: install apache
+      zypper:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - apache2
+        - apache2-mod_php53
+        - apache2-utils
+        - libapr1
+        - libapr-util1
+        - php53-pgsql
+        - libpq5
+        - php53
+        - php53-pdo
+
+    - name: copy apache config
+      copy:
+        src: /var/www/html/ds/apache2
+        dest: /etc/sysconfig/apache2
+
+    - name: enable, start apache service
+      service:
+        name: apache2
+        state: started
+        enabled: true
+
+    #mono
+    - name: install mono
+      zypper:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - mono-core
+        - mono-data
+        - mono-data-postgresql
+
+    #copy files
+    - name: copy ds2 files
+      synchronize:
+        src: /var/www/html/ds/ds2
+        dest: /opt/
+
+    - name: copy ds2 web files
+      synchronize:
+        src: /var/www/html/ds/ds2/pgsqlds2/web/php/
+        dest: /srv/www/htdocs/ds2/
+
+    - name: copy driver config
+      copy:
+          src: /var/www/html/ds/DriverConfig.txt
+          dest: /opt/ds2/DriverConfig.txt
+
+    #run scripts
+    - name: Install_DVDStore_una.pl
+      command: perl Install_DVDStore_una.pl
+      args:
+        chdir: /opt/ds2/
+
+    - name: symlink
+      file:
+        src: /opt/ds2/data_files
+        dest: /tmp/data_files
+        state: link
+
+    - name: fill database
+      command: sh pgsqlds2_create_all.sh
+      args:
+        chdir: /opt/ds2/pgsqlds2/
+
+    #compile mono binary
+    - name: mono binaris
+      command: gmcs ds2xdriver.cs ds2webfns.cs /out:ds2webdriver_mono.exe
+      args:
+        chdir: /opt/ds2/drivers/
