@@ -1,0 +1,9 @@
+#!/bin/bash
+#configuration parameters for routerconfigs.sh
+DEBUG="n"
+TODAY=`date +%F`
+ROUTER_LIST="etc/routers.txt"
+
+#routerbackup
+TFTP_HOST="172.31.79.98"
+TFTP_DIR="/var/lib/tftpboot"

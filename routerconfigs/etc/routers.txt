@@ -1,0 +1,2 @@
+#hostname;type;user;password;comment;
+dev1.example.com;extreme;admin;password;
