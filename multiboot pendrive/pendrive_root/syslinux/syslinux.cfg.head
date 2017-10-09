@@ -1,0 +1,12 @@
+SERIAL 0 115200
+DEFAULT menu.c32
+#serial boot message
+DISPLAY boot.msg
+PROMPT 1
+TIMEOUT 0
+#if the serial output is messed up then you can boot with the following:
+#DEFAULT sysrescd_serial
+#TIMEOUT 10
+
+#vga console menu
+MENU TITLE  Multi OS install pendrive by Andras

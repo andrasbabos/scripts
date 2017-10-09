@@ -1,0 +1,2 @@
+http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/
+

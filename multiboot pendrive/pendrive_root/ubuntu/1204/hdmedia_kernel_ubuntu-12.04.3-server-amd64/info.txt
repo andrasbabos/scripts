@@ -1,0 +1,1 @@
+http://archive.ubuntu.com/ubuntu/dists/precise-updates/main/installer-amd64/current/images/raring-hd-media/
