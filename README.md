@@ -9,3 +9,4 @@ The projects, directories are:
 * pxe gen - pxe boot menu generator script
 * routerconfigs - back up various router's configuration
 * shut down infrastructure - shut down vSphere infrastructure
+* esxi shutdown - shut down virtual machines and free licensed ESXi hosts
