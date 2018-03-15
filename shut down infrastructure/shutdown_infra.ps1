@@ -33,7 +33,7 @@ Get-VM | where-object {$_.PowerState -eq "PoweredOn"} | Select Name
 Read-Host -Prompt "Please press enter when you stopped all vm's except vcenter and it's safe to shut down hosts."
 
 #shut down esxi hosts
-get-VMHost | where-object {$_.name -ne $vCenterHost} | Stop-VMHost -force:$true -runasync:$true -confirm:$false | out-null
+get-VMHost | where-object {$_.name -ne $vCenterHost} | where-object {$_.PowerState -eq "PoweredOn"} | Stop-VMHost -force:$true -runasync:$true -confirm:$false | out-null
 
 Disconnect-VIServer -Server $vcenter -Force -Confirm:$false
 
