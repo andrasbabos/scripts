@@ -1,0 +1,91 @@
+---
+- name: set user
+  user:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+    comment: "{{ item.comment }}"
+    password: "{{ item.password }}"
+# ansible 2.6 needed for pwd lock!
+# it's buggy in 2.6.5, always report changed status
+# https://github.com/ansible/ansible/pull/43671/commits/f0fbabdae39afbf26323837a3af4e75a8388990a
+#    password_lock: "{{ item.password_lock }}"
+  with_items: "{{ patrol_set_user }}"
+  tags:
+  - bmc_patrol-set_user
+
+- name: reset password expiration (always report changed status)
+  command: chage -M -1 "{{ item.name }}"
+  with_items: "{{ patrol_set_user }}"
+  tags:
+  - bmc_patrol-set_pwd_exp
+
+- name: get new user's home directory
+  getent:
+    database: passwd
+    key: "{{ item.name }}"
+  with_items: "{{ patrol_set_user }}"
+  tags:
+  - bmc_patrol-get_home
+
+- name: disable home from path (security)
+  replace:
+    path: "{{getent_passwd[item.name][4]}}/.bash_profile"
+    regexp: '^PATH='
+    replace: '# disabled because security requirement PATH='
+  with_items: "{{ patrol_set_user }}"
+  tags:
+  - bmc_patrol-disable_home
+
+- name: set patrol.rc execution in .bashrc
+  blockinfile:
+    path: "{{getent_passwd[item.name][4]}}/.bashrc"
+    block: "{{ item.patrolrc }}"
+    backup: yes
+  with_items: "{{ patrol_set_user }}" 
+  tags:
+  - bmc_patrol-set_patrolrc
+
+- name: create install directory
+  file:
+    path: "{{ patrol_installer_dir }}"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: 0755
+  with_items: "{{ patrol_set_user }}"
+  tags:
+  - bmc_patrol-create_install_dir
+
+- name: create target directory
+  file:
+    path: "{{ patrol_target_dir }}"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ patrol_set_user }}"
+  tags:
+  - bmc_patrol-create_target_dir
+
+- name: copy install files
+  synchronize:
+    src: "{{ patrol_source_dir }}"
+    dest: "{{ patrol_installer_dir }}"
+    owner: no
+    group: no
+    delete: yes
+# The OEL 6 /etc/sudoers.d setting: "Defaults    requiretty" prevents the ansible sudo from running so this part is blocking the playbook to be work with regular user, root needed :(
+  become: no
+  tags:
+  - bmc_patrol-copy_install
+
+- name: set permissions
+  file:
+    dest: "{{ patrol_installer_dir }}"
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: "{{ item.mode }}" 
+    recurse: yes
+  with_items: "{{ patrol_set_user }}"
+  tags:
+  - bmc_patrol-set_perm

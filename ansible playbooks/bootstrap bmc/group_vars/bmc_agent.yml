@@ -1,0 +1,56 @@
+---
+bladelogic_copy_before:
+  - name: "RSCD89-SP1-LIN64.rpm"
+    source: "/somewhere/BMC/BSA agent"
+    target: "/tmp/"
+    owner: root
+    group: root
+    mode: 755
+
+bladelogic_rpm:
+  - name: "RSCD89-SP1-LIN64.rpm"
+    source: "/tmp"
+
+bladelogic_check_dir: "/etc/rsc/"
+
+bladelogic_copy_after:
+  - name: "exports"
+    source: "/somewhere/BMC/BSA agent/"
+    target: "/etc/rsc/"
+    owner: root
+    group: root
+    mode: 644
+  - name: "users.local"
+    source: "/somewhere/BMC/BSA agent/"
+    target: "/etc/rsc/"
+    owner: root
+    group: root
+    mode: 644
+
+patrol_set_user:
+  - name: "patrol"
+    state: "present"
+    comment: "BMC patrol service user"
+    password: "password_hash_string"
+#    password_lock: yes
+    patrolrc: "cd /opt/bmc/patrol/Patrol3 && . /opt/bmc/patrol/Patrol3/patrolrc.sh && cd ~"
+    mode: "755"
+
+patrol_source_dir: "/somewhere/BMC/TSOM agent/ansible/some_dir/bmc_products"
+patrol_installer_dir: "/opt/bmc/installer"
+patrol_target_dir: "/opt/bmc/patrol"
+
+discovery_set_user:
+  - name: "discadmin"
+    state: "present"
+    comment: "BMC discovery user"
+#    password_lock: yes
+    password: "password_hash_string"
+    sudo_file: "discadmin"
+
+discovery_set_ssh_public_key:
+  - name: "discadmin"
+    key: "ssh-rsa key"
+    state: "present"
+
+discovery_sudo_package: sudo

@@ -1,0 +1,64 @@
+---
+- name: set user
+  user:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+    comment: "{{ item.comment }}"
+    password: "{{ item.password }}"
+# ansible 2.6 needed for pwd lock!
+# it's buggy in 2.6.5, always report changed status
+# https://github.com/ansible/ansible/pull/43671/commits/f0fbabdae39afbf26323837a3af4e75a8388990a
+#    password_lock: "{{ item.password_lock }}"
+  with_items: "{{ discovery_set_user }}"
+  tags:
+  - bmc_discovery-set_user
+
+- name: reset password expiration (always report changed status)
+  command: chage -M -1 "{{ item.name }}"
+  with_items: "{{ discovery_set_user }}"
+  tags:
+  - bmc_discovery-set_pwd_exp
+
+# it will be good to get rid of the password and use ssh key for discovery appliance -> client authentication
+#- name: set ssh public key
+#  authorized_key:
+#    user: "{{ item.name }}"
+#    key: "{{ item.key }}"
+#    state: "{{ item.state }}"
+#  with_items: "{{ discovery_set_ssh_public_key }}"
+#  tags:
+#  - bmc_discovery-set_ssh_pub_key
+
+- name: get new user's home directory
+  getent:
+    database: passwd
+    key: "{{ item.name }}"
+  with_items: "{{ discovery_set_user }}"
+
+- name: disable home from path (security)
+  replace:
+    path: "{{getent_passwd[item.name][4]}}/.bash_profile"
+    regexp: '^PATH='
+    replace: '# disabled because security requirement PATH='
+  with_items: "{{ discovery_set_user }}"
+
+#package module doesn't work with RHEL 5
+- name: install sudo package
+  package: 
+    name: "{{ discovery_sudo_package }}"
+    state: present
+  tags:
+  - bmc_discovery-sudo-install
+
+- name: copy sudo template
+  template:
+    src: "{{ item.sudo_file }}.j2"
+    dest: "/etc/sudoers.d/{{ item.sudo_file }}"
+    owner: root
+    group: root
+    mode: 0644
+    validate: '/usr/sbin/visudo -cf %s'
+  with_items: "{{ discovery_set_user }}"
+  tags:
+  - bmc_discovery-copy_template
+

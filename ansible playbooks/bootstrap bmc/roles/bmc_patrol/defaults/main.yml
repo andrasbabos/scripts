@@ -1,0 +1,14 @@
+---
+patrol_set_user:
+  - name: "patrol"
+    state: "present"
+    comment: "BMC patrol service user"
+    password: "password_hash_string"
+#    password_lock: yes
+    patrolrc: "cd /opt/bmc/patrol/Patrol3 && . /opt/bmc/patrol/Patrol3/patrolrc.sh && cd ~"
+    mode: 0755
+
+patrol_source_dir: "/somewhere/BMC/TSOM agent/ansible/some_dir/bmc_products"
+patrol_installer_dir: "/opt/bmc/installer"
+patrol_target_dir: "/opt/bmc/patrol"
+

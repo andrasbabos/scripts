@@ -1,0 +1,47 @@
+---
+- name: copy files before install
+  copy:
+    src: "{{ item.source }}/{{ item.name }}"
+    dest: "{{ item.target }}/{{ item.name }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ bladelogic_copy_before }}"
+  tags:
+  - bmc_bladelogic-copy_before
+
+- name: install rpm package
+  yum:
+    name: "{{ item.source }}/{{ item.name }}"
+    state: present
+  with_items: "{{ bladelogic_rpm }}"
+  tags:
+  - bmc_bladelogic-install_rpm
+
+- name: remove rpm from file system
+  file:
+    name: "{{ item.source }}/{{ item.name }}"
+    state: absent
+  with_items: "{{ bladelogic_rpm }}"
+  tags:
+  - bmc_bladelogic-_rm_from_fs
+
+- name: check if bladelogic config directory exist
+  stat:
+    path: "{{ bladelogic_check_dir }}"
+  register: bl_conf_dir
+  tags:
+  - bmc_bladelogic-copy_after
+
+- name: copy files after install, if bladelogic dir exists
+  copy:
+    src: "{{ item.source }}/{{ item.name }}"
+    dest: "{{ item.target }}/{{ item.name }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+    backup: yes
+  with_items: "{{ bladelogic_copy_after }}"
+  when: bl_conf_dir.stat.exists and bl_conf_dir.stat.isdir
+  tags:
+  - bmc_bladelogic-copy_after

@@ -1,0 +1,28 @@
+---
+bladelogic_copy_before:
+  - name: "RSCD89-SP1-LIN64.rpm"
+    source: "/somewhere/BMC/BSA agent"
+    target: "/tmp/"
+    owner: root
+    group: root
+    mode: 755
+
+bladelogic_rpm:
+  - name: "RSCD89-SP1-LIN64.rpm"
+    source: "/tmp"
+
+bladelogic_check_dir: "/etc/rsc/"
+
+bladelogic_copy_after:
+  - name: "exports"
+    source: "/somewhere/BMC/BSA agent/"
+    target: "/etc/rsc/"
+    owner: root
+    group: root
+    mode: 644
+  - name: "users.local"
+    source: "/somewhere/BMC/BSA agent/"
+    target: "/etc/rsc/"
+    owner: root
+    group: root
+    mode: 644

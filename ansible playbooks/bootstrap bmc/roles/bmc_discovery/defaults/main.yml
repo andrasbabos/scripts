@@ -1,0 +1,15 @@
+---
+discovery_set_user:
+  - name: "discadmin"
+    state: "present"
+    comment: "BMC discovery user"
+#    password_lock: yes
+    password: "password_hash_string"
+    sudo_file: "discadmin"
+
+discovery_set_ssh_public_key:
+  - name: "discadmin"
+    key: "ssh-rsa key"
+    state: "present"
+
+discovery_sudo_package: sudo

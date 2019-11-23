@@ -1,0 +1,11 @@
+---
+- hosts: bmc_agent
+  become: yes
+  roles:
+    - role: bmc_discovery
+      tags: bmc_discovery
+    - role: bmc_bladelogic
+      tags: bmc_bladelogic
+    - role: bmc_patrol
+      tags: bmc_patrol
+
