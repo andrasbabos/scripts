@@ -1,0 +1,4 @@
+#managed by restricted_user ansible role
+{% for item in set_user %}
+{{ item.whitelist_command|join('\n') }}
+{% endfor %}

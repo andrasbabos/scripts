@@ -1,0 +1,19 @@
+---
+set_user:
+  - name: "restricteduser"
+    state: "present"
+    comment: "rsync service user"
+    sudo_file: "template"
+    sudo_command: 
+      - /bin/ls
+      - /bin/more
+    whitelist_command:
+      - /bin/ls
+      - /bin/more
+
+set_ssh_public_key:
+  - name: "restricteduser"
+    key: "ssh-rsa key string"
+    state: "present"
+
+sudo_package: sudo

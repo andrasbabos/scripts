@@ -1,0 +1,4 @@
+#managed by restricted_user ansible role
+{% for item in set_user %}
+{{ item.name }}  ALL=(ALL)  NOPASSWD: {{ item.sudo_command|join(', ') }}
+{% endfor %}

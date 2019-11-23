@@ -1,0 +1,6 @@
+---
+- hosts: restricted_user
+  become: yes
+  roles:
+    - role: restricted_user
+      tags: restricted_user

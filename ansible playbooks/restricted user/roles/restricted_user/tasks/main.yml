@@ -1,0 +1,108 @@
+---
+- name: set user
+  user:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+    comment: "{{ item.comment }}" 
+# ansible 2.6 needed for pwd lock!
+# it's buggy in 2.6.5, always report changed status
+# https://github.com/ansible/ansible/pull/43671/commits/f0fbabdae39afbf26323837a3af4e75a8388990a
+#    password_lock: "{{ item.password_lock }}"
+  with_items: "{{ set_user }}"
+  tags:
+  - restricted_user-set_user
+
+- name: reset password expiration (always report changed status)
+  command: chage -M -1 "{{ item.name }}"
+  with_items: "{{ set_user }}"
+  tags:
+  - restricted_user-set_pwd_exp
+
+- name: set ssh public key
+  authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.key }}"
+    state: "{{ item.state }}"
+  with_items: "{{ set_ssh_public_key }}"
+  tags:
+  - restricted_user-set_ssh_pub_key
+
+- name: get new user's home directory
+  getent:
+    database: passwd
+    key: "{{ item.name }}"
+  with_items: "{{ set_user }}"
+
+- name: disable home from path (security)
+  replace:
+    path: "{{getent_passwd[item.name][4]}}/.bash_profile"
+    regexp: '^PATH='
+    replace: '# disabled because security requirement PATH='
+  with_items: "{{ set_user }}"
+
+#package module doesn't work with RHEL 5
+- name: install sudo package
+  package: 
+    name: "{{ sudo_package }}"
+    state: present
+  tags:
+  - restricted_user-sudo-install
+
+- name: copy sudo template
+  template:
+    src: "sudo-user.j2"
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    owner: root
+    group: root
+    mode: 0644
+    validate: '/usr/sbin/visudo -cf %s'
+  with_items: "{{ set_user }}"
+  tags:
+  - restricted_user-copy_template
+
+- name: copy command_whitelist.py
+  copy:
+    src: "{{ role_path }}/files/command_whitelist.py"
+    dest: /usr/local/bin/command_whitelist.py
+    owner: root
+    group: root
+    mode: 0555
+  tags:
+  - restricted_user-copy_whitelist_script
+
+- name: create whitelist config directory
+  file:
+    path: "/usr/local/etc/restricted_user/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+  - restricted_user-create_whitelist_dir
+
+- name: create whitelist command list
+  template:
+    src: "whitelist.j2"
+    dest: "/usr/local/etc/restricted_user/{{ item.name }}.txt"
+    owner: root
+    group: root
+    mode: 0444
+  with_items: "{{ set_user }}"
+  tags:
+  - restricted_user-create_whitelist
+
+- name: update sshd_config
+  blockinfile:
+    path: "/etc/ssh/sshd_config"
+    backup: yes
+    state: "{{ item.state }}"
+    marker: "# {mark} Managed by restricted_user ansible role"
+    validate: "/usr/sbin/sshd -T -f %s"
+    block: |
+      Match User {{ item.name }}
+          AllowTCPForwarding no
+          X11Forwarding no
+          ForceCommand /usr/local/bin/command_whitelist.py
+  with_items: "{{ set_user }}"
+  notify:
+    - restart sshd
