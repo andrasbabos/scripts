@@ -129,7 +129,7 @@
         chdir: /opt/ds2/pgsqlds2/
 
     #compile mono binary
-    - name: mono binaris
+    - name: mono binary
       command: gmcs ds2xdriver.cs ds2webfns.cs /out:ds2webdriver_mono.exe
       args:
         chdir: /opt/ds2/drivers/

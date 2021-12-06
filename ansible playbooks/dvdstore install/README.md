@@ -1,4 +1,4 @@
-## dvd store isntall
+## dvd store install
 
 This is an ansible playbook to install DVD Store 2.1 on SLES 11 servers for burn-in test execution.
 
